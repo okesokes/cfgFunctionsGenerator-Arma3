@@ -3,7 +3,7 @@
 import * as vscode from 'vscode';
 import * as fastglob from 'fast-glob';
 import uripath from 'file-uri-to-path';
-import parentdir from 'find-parent-dir';
+import path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -108,7 +108,7 @@ export function deactivate() {}
 
 function formatFunctionClass(sqfFileURI: vscode.Uri) {
 	const functionName = "";
-	const functionPath = "";
+	var functionPath = "";
 	const subcategory = "";
 	const subcategoryFolder = "";
 	const returnValue = "";
@@ -116,8 +116,22 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 
 	if (sqfFileString.endsWith('.sqf')) {
 		console.log(sqfFileString);
-		const functionPath = parentdir(sqfFileString);
+
+		functionPath = path.dirname(sqfFileString);
+		while (functionPath.charAt(0) === '/') {
+			functionPath = functionPath.substring(1);
+		}
+
 		console.log(functionPath);
+		
+		var functionPathSplit = functionPath.split("/");
+		
+		const depth = functionPathSplit.length;
+		console.log(depth);
+
+		if (sqfFileString.startsWith('fn_')) {
+			functionPath = 
+		}
 
 	} else {
 		vscode.window.showErrorMessage("Generic error! Something went wrong when generating CfgFunctions. Double check the contents of it.");
