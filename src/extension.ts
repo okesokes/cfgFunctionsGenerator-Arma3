@@ -4,6 +4,7 @@ import * as vscode from 'vscode';
 import * as fastglob from 'fast-glob';
 import uripath from 'file-uri-to-path';
 import path from 'path';
+import fs from 'fs';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -32,28 +33,36 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		// Define start of CfgFunctions.hpp
-		const content = [
-			"#ifdef DEBUG_ENABLED_FULL",
-			"allowFunctionsRecompile = 1;",
-			"allowFunctionsLog = 1;",
-			"#endif",
-			"",
-			"class CfgFunctions",
-			"{",
-			"",
-			"\tclass " + developerTag,
-			"\t{",
-			""
-		];
+		var content =
+			"#ifdef DEBUG_ENABLED_FULL\n" +
+			"allowFunctionsRecompile = 1;\n" +
+			"allowFunctionsLog = 1;\n" +
+			"#endif\n" +
+			"\n" +
+			"class CfgFunctions\n" +
+			"{\n" +
+			"\n" +
+			"\tclass " + developerTag + "\n" +
+			"\t{\n" +
+			"\n";
+
+		const currentFileString = vscode.window.activeTextEditor?.document.uri.fsPath.toString();
+		const currentFileUri = vscode.window.activeTextEditor?.document.uri;
+
+
+		const currentDirString = path.dirname(currentFileString);
+		const currentDirUri = vscode.Uri.file(currentDirString);
+
+		console.log("Current dir URI: " + currentDirUri);
 
 		// Get all categories by looking at the folders
-		const categories = await vscode.workspace.fs.readDirectory(vscode.workspace.workspaceFolders[0].uri).then((results) =>
+		const categories = await vscode.workspace.fs.readDirectory(currentDirUri).then((results) =>
 		// Include folders only (and not files)
 		results.filter((result) => result[1] === 2).map((filteredResult) => filteredResult[0])
 		);
 
 		// DEBUG
-		console.log(categories);
+		console.log("CATEGORIES: " + categories);
 
 		const categoriesUpperCase = categories.map(category => category.toUpperCase());
 
@@ -64,8 +73,6 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log(content);
 
 		var subfoldersFiles = "";
-		const currentDirString = uripath(vscode.workspace.workspaceFolders[0].uri.toString());
-		const currentDirUri = vscode.workspace.workspaceFolders[0].uri;
 
 		console.log("currentDirString: " + currentDirString);
 
@@ -73,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
 			console.log("");
 			console.log("### CATEGORY ADDED: " + category);
 			console.log("");
-			content.push("\t\tclass " + category + "\t\t");
+			content = content + "\t\tclass " + category + "\n\t\t{\n";
 
 			const sqfFiles = fastglob.sync((category + "/**/*.sqf").replace(/\\/g, '/'), {cwd: currentDirString, globstar: true});
 
@@ -82,8 +89,27 @@ export function activate(context: vscode.ExtensionContext) {
 			if (sqfFiles.length > 0) {
 				sqfFiles.forEach(function(sqfFile) {
 					const formattedClass = formatFunctionClass(vscode.Uri.file(sqfFile));
+
+					if (formattedClass !== "") {
+						content = content + "\t\t\t" + formattedClass + "\n";
+					}
 				});
-			}
+			};
+
+			content = content + "\t\t};\n";
+
+		content = content + "\t};" + "\n" + "};";
+
+		console.log(content);
+
+		const outputCfgFunctions = "\n" + content;
+
+		const currentEditor = vscode.window.activeTextEditor;
+
+		if (currentEditor) {
+			let cfgFunctionsHpp = currentEditor.document.uri.fsPath;
+			fs.writeFileSync(cfgFunctionsHpp, outputCfgFunctions, 'utf8');
+		}
 
 			/*
 			sqfStream.on('data', function (chunk) {
@@ -113,25 +139,30 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 	var subcategory = "";
 	var subcategoryFolder = "";
 	var returnValue = "";
-	const sqfFileString = uripath(sqfFileURI.toString());
+	var sqfFileString = uripath(sqfFileURI.toString());
+
+	console.log("SQF FILE URI: " + sqfFileURI);
 
 	if (sqfFileString.endsWith('.sqf')) {
-		console.log(sqfFileString);
+		console.log("SQF file string: " + sqfFileString);
 
 		functionDirPath = path.dirname(sqfFileString);
 		while (functionDirPath.charAt(0) === '/') {
 			functionDirPath = functionDirPath.substring(1);
 		}
 
+		functionDirPath = functionDirPath.replace(/\//g,"\\");
+		sqfFileString = sqfFileString.replace(/\//g,"\\");
+
 		console.log("FunctionDirPath: " + functionDirPath);
 		
-		var functionDirPathSplit = functionDirPath.split("/");
+		var functionDirPathSplit = functionDirPath.split("\\");
 		
 		const depth = functionDirPathSplit.length;
 		console.log("Depth: " + depth);
 		console.log("Function directory path split: " + functionDirPathSplit);
 
-		var sqfFileStringSplit = sqfFileString.split("/");
+		var sqfFileStringSplit = sqfFileString.split("\\");
 		console.log("SQF file string split: " + sqfFileStringSplit);
 		var sqfFilename = sqfFileStringSplit.at(-1);
 		console.log("SQF filename: " + sqfFilename);
@@ -142,7 +173,7 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 
 			var sqfFileStringTemp = sqfFileString;
 
-			while (sqfFileStringTemp.charAt(0) === '/') {
+			while (sqfFileStringTemp.charAt(0) === '\\') {
 				sqfFileStringTemp = sqfFileStringTemp.substring(1);
 			}
 			console.log("FUNCTION DIR PATH: " + sqfFileStringTemp);
@@ -150,18 +181,18 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			functionName = functionName.replace("fn_", "");
 			console.log("Function name: " + functionName);
 
-			if (depth > 3) {
-				var functionDirPathSplitReversed = functionDirPathSplit.reverse();
-				subcategory = functionDirPathSplitReversed[depth - (depth - (depth - 3))];
-				console.log("Subcategory: " + subcategory);
+			functionPath = functionDirPath + "\\" + sqfFilename;
 
-				functionPath = functionDirPath + "/" + sqfFilename;
+			if (depth > 2) {
+				var functionDirPathSplitReversed = functionDirPathSplit.reverse();
+				subcategory = functionDirPathSplitReversed[depth - (depth - (depth - 2))];
+				console.log("Subcategory: " + subcategory);
 
 				returnValue = nestedFolderFunctionName(subcategory, functionName, functionPath);
 			}
 
-			else if (depth === 3) {
-				returnValue = coreFunctionName(functionName, functionDirPath);
+			else if (depth === 2) {
+				returnValue = coreFunctionName(functionName, functionPath);
 
 			}
 			
@@ -183,10 +214,10 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 }
 
 function nestedFolderFunctionName(subcategory: string, functionName: string, functionPath: string) {
-	return "class " + subcategory + "_" + functionName + " { file = " + functionPath + "; };";
+	return "class " + subcategory + "_" + functionName + " { file = \"" + functionPath + "\"; };";
 }
 
 function coreFunctionName(functionName: string, functionDirPath: string) {
-	return "class " + functionName + " { file = " + functionDirPath + "; };";
+	return "class " + functionName + " { file = \"" + functionDirPath + "\"; };";
 }
 
