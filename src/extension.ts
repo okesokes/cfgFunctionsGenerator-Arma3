@@ -188,7 +188,7 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			}
 			
 			else {
-				vscode.window.showWarningMessage("Function \"" + functionName + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of \\functions folder.");
+				vscode.window.showWarningMessage("Function \"" + functionName + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of " + path.sep + "functions folder.");
 			};
 
 		} else {
