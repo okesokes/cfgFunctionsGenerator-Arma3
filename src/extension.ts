@@ -53,6 +53,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 		console.log("Current dir URI: " + currentDirUri);
 
+		const filesOutsideOfFunctionsFolder = fastglob.sync(("*.sqf"), {cwd: currentDirString, globstar: true});
+
+		if (filesOutsideOfFunctionsFolder.length > 0) {
+			filesOutsideOfFunctionsFolder.forEach(function(fileOutside) {
+				const addFnToFile = vscode.window.showWarningMessage("File \"" + fileOutside + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of " + path.sep + "functions folder.");
+			});
+		};
+		
 		// Get all categories by looking at the folders
 		const categories = await vscode.workspace.fs.readDirectory(currentDirUri).then((results) =>
 		// Include folders only (and not files)
@@ -73,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
 		console.log("currentDirString: " + currentDirString);
 
 		categories.forEach (function (category) {
-			content = content + "\t\tclass " + category + "\n\t\t{\n";
+			content = content + "\t\tclass " + category + "\n\t\t{\n\n";
 
 			const sqfFiles = fastglob.sync((category + path.sep + "**" + path.sep + "*.sqf"), {cwd: currentDirString, globstar: true});
 
@@ -89,9 +97,11 @@ export function activate(context: vscode.ExtensionContext) {
 				});
 			};
 
-			content = content + "\t\t};\n";
+			content = content + "\n\t\t};\n\n";
 
-		content = content + "\t};" + "\n" + "};";
+		});
+
+		content = content + "\t};\n\n};\n\n";
 
 		console.log(content);
 
@@ -102,20 +112,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if (currentEditor) {
 			let cfgFunctionsHpp = currentEditor.document.uri.fsPath;
 			fs.writeFileSync(cfgFunctionsHpp, outputCfgFunctions, 'utf8');
-		}
-
-			/*
-			sqfStream.on('data', function (chunk) {
-				subfoldersFiles += chunk.toString();
-				console.log("SQF file: " + chunk.toString());
-			});
-
-			sqfStream.on('end', function() {
-				console.log("final output " + subfoldersFiles);
-			});
-			*/			
-
-		});
+		};
 
 	});
 
@@ -156,6 +153,11 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 		let sqfFileStringSplit = sqfFileString.split(path.sep);
 		console.log("SQF file string split: " + sqfFileStringSplit);
 		let sqfFilename = sqfFileStringSplit.at(-1);
+
+		if (sqfFilename === undefined) {
+			vscode.window.showErrorMessage("Generic error! SQF file name is undefined.");
+		};
+
 		console.log("SQF filename: " + sqfFilename);
 
 		functionName = sqfFilename.replace(".sqf", "");
@@ -192,7 +194,7 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			};
 
 		} else {
-			vscode.window.showWarningMessage("File \"" + sqfFilename + "\" didn't get included to CfgFunctions: file name didn't start with 'fn_'.");
+			const addFnToFile = vscode.window.showWarningMessage("File \"" + sqfFilename + "\" didn't get included to CfgFunctions: file name didn't start with 'fn_'.");
 		};
 
 	} else {
