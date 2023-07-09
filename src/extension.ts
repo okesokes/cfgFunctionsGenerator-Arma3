@@ -33,7 +33,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		// Define start of CfgFunctions.hpp
-		var content =
+		let content =
 			"#ifdef DEBUG_ENABLED_FULL\n" +
 			"allowFunctionsRecompile = 1;\n" +
 			"allowFunctionsLog = 1;\n" +
@@ -126,12 +126,12 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 function formatFunctionClass(sqfFileURI: vscode.Uri) {
-	var functionName = "";
-	var functionPath = "";
-	var functionDirPath = "";
-	var subcategory = "";
-	var returnValue = "";
-	var sqfFileString = uripath(sqfFileURI.toString());
+	let functionName = "";
+	let functionPath = "";
+	let functionDirPath = "";
+	let subcategory = "";
+	let returnValue = "";
+	let sqfFileString = uripath(sqfFileURI.toString());
 
 	console.log("SQF FILE URI: " + sqfFileURI);
 
@@ -145,26 +145,24 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			functionDirPath = functionDirPath.substring(1);
 		}
 
-		
-
 		console.log("FunctionDirPath: " + functionDirPath);
 		
-		var functionDirPathSplit = functionDirPath.split(path.sep);
+		let functionDirPathSplit = functionDirPath.split(path.sep);
 		
 		const depth = functionDirPathSplit.length;
 		console.log("Depth: " + depth);
 		console.log("Function directory path split: " + functionDirPathSplit);
 
-		var sqfFileStringSplit = sqfFileString.split(path.sep);
+		let sqfFileStringSplit = sqfFileString.split(path.sep);
 		console.log("SQF file string split: " + sqfFileStringSplit);
-		var sqfFilename = sqfFileStringSplit.at(-1);
+		let sqfFilename = sqfFileStringSplit.at(-1);
 		console.log("SQF filename: " + sqfFilename);
 
 		functionName = sqfFilename.replace(".sqf", "");
 
 		if (sqfFilename.startsWith('fn_')) {
 
-			var sqfFileStringTemp = sqfFileString;
+			let sqfFileStringTemp = sqfFileString;
 
 			while (sqfFileStringTemp.charAt(0) === path.sep) {
 				sqfFileStringTemp = sqfFileStringTemp.substring(1);
@@ -177,7 +175,7 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			functionPath = functionDirPath + path.sep + sqfFilename;
 
 			if (depth > 2) {
-				var functionDirPathSplitReversed = functionDirPathSplit.reverse();
+				let functionDirPathSplitReversed = functionDirPathSplit.reverse();
 				subcategory = functionDirPathSplitReversed[depth - (depth - (depth - 3))];
 				console.log("Subcategory: " + subcategory);
 
