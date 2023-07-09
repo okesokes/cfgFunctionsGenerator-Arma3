@@ -24,7 +24,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		console.log('Your tag is: ' + developerTag);
 
-		vscode.window.showWarningMessage('Your tag is: ' + developerTag);
+		vscode.window.showInformationMessage('Your developer/project tag is: ' + developerTag);
 
 		if(developerTag === 'YOUR_TAG_HERE') {
 			vscode.window.showErrorMessage('Your developer/project tag is not yet defined in extension settings! Please define it via VS Code -> Settings -> Extensions and try again.');
@@ -107,35 +107,86 @@ export function activate(context: vscode.ExtensionContext) {
 export function deactivate() {}
 
 function formatFunctionClass(sqfFileURI: vscode.Uri) {
-	const functionName = "";
+	var functionName = "";
 	var functionPath = "";
-	const subcategory = "";
-	const subcategoryFolder = "";
-	const returnValue = "";
+	var functionDirPath = "";
+	var subcategory = "";
+	var subcategoryFolder = "";
+	var returnValue = "";
 	const sqfFileString = uripath(sqfFileURI.toString());
 
 	if (sqfFileString.endsWith('.sqf')) {
 		console.log(sqfFileString);
 
-		functionPath = path.dirname(sqfFileString);
-		while (functionPath.charAt(0) === '/') {
-			functionPath = functionPath.substring(1);
+		functionDirPath = path.dirname(sqfFileString);
+		while (functionDirPath.charAt(0) === '/') {
+			functionDirPath = functionDirPath.substring(1);
 		}
 
-		console.log(functionPath);
+		console.log("FunctionDirPath: " + functionDirPath);
 		
-		var functionPathSplit = functionPath.split("/");
+		var functionDirPathSplit = functionDirPath.split("/");
 		
-		const depth = functionPathSplit.length;
-		console.log(depth);
+		const depth = functionDirPathSplit.length;
+		console.log("Depth: " + depth);
+		console.log("Function directory path split: " + functionDirPathSplit);
 
-		if (sqfFileString.startsWith('fn_')) {
-			functionPath = 
-		}
+		var sqfFileStringSplit = sqfFileString.split("/");
+		console.log("SQF file string split: " + sqfFileStringSplit);
+		var sqfFilename = sqfFileStringSplit.at(-1);
+		console.log("SQF filename: " + sqfFilename);
+
+		functionName = sqfFilename.replace(".sqf", "");
+
+		if (sqfFilename.startsWith('fn_')) {
+
+			var sqfFileStringTemp = sqfFileString;
+
+			while (sqfFileStringTemp.charAt(0) === '/') {
+				sqfFileStringTemp = sqfFileStringTemp.substring(1);
+			}
+			console.log("FUNCTION DIR PATH: " + sqfFileStringTemp);
+
+			functionName = functionName.replace("fn_", "");
+			console.log("Function name: " + functionName);
+
+			if (depth > 3) {
+				var functionDirPathSplitReversed = functionDirPathSplit.reverse();
+				subcategory = functionDirPathSplitReversed[depth - (depth - (depth - 3))];
+				console.log("Subcategory: " + subcategory);
+
+				functionPath = functionDirPath + "/" + sqfFilename;
+
+				returnValue = nestedFolderFunctionName(subcategory, functionName, functionPath);
+			}
+
+			else if (depth === 3) {
+				returnValue = coreFunctionName(functionName, functionDirPath);
+
+			}
+			
+			else {
+				vscode.window.showWarningMessage("Function \"" + functionName + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of \\functions folder.");
+			};
+
+		} else {
+			vscode.window.showWarningMessage("File \"" + sqfFilename + "\" didn't get included to CfgFunctions: file name didn't start with 'fn_'.");
+		};
 
 	} else {
 		vscode.window.showErrorMessage("Generic error! Something went wrong when generating CfgFunctions. Double check the contents of it.");
 		return;
 	}
 
+	console.log("Return value: " + returnValue + "\n");
+	return returnValue;
 }
+
+function nestedFolderFunctionName(subcategory: string, functionName: string, functionPath: string) {
+	return "class " + subcategory + "_" + functionName + " { file = " + functionPath + "; };";
+}
+
+function coreFunctionName(functionName: string, functionDirPath: string) {
+	return "class " + functionName + " { file = " + functionDirPath + "; };";
+}
+
