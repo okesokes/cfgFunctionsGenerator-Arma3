@@ -75,7 +75,7 @@ export function activate(context: vscode.ExtensionContext) {
 		categories.forEach (function (category) {
 			content = content + "\t\tclass " + category + "\n\t\t{\n";
 
-			const sqfFiles = fastglob.sync((category + "/**/*.sqf"), {cwd: currentDirString, globstar: true});
+			const sqfFiles = fastglob.sync((category + path.sep + "**" + path.sep + "*.sqf"), {cwd: currentDirString, globstar: true});
 
 			console.log(sqfFiles);
 
@@ -130,7 +130,6 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 	var functionPath = "";
 	var functionDirPath = "";
 	var subcategory = "";
-	var subcategoryFolder = "";
 	var returnValue = "";
 	var sqfFileString = uripath(sqfFileURI.toString());
 
