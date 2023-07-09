@@ -47,8 +47,6 @@ export function activate(context: vscode.ExtensionContext) {
 			"\n";
 
 		const currentFileString = vscode.window.activeTextEditor?.document.uri.fsPath.toString();
-		const currentFileUri = vscode.window.activeTextEditor?.document.uri;
-
 
 		const currentDirString = path.dirname(currentFileString);
 		const currentDirUri = vscode.Uri.file(currentDirString);
@@ -72,17 +70,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// DEBUG
 		console.log(content);
 
-		var subfoldersFiles = "";
-
 		console.log("currentDirString: " + currentDirString);
 
 		categories.forEach (function (category) {
-			console.log("");
-			console.log("### CATEGORY ADDED: " + category);
-			console.log("");
 			content = content + "\t\tclass " + category + "\n\t\t{\n";
 
-			const sqfFiles = fastglob.sync((category + "/**/*.sqf").replace(/\\/g, '/'), {cwd: currentDirString, globstar: true});
+			const sqfFiles = fastglob.sync((category + "/**/*.sqf"), {cwd: currentDirString, globstar: true});
 
 			console.log(sqfFiles);
 
@@ -143,26 +136,27 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 
 	console.log("SQF FILE URI: " + sqfFileURI);
 
+	sqfFileString = "functions" + sqfFileString;
+
 	if (sqfFileString.endsWith('.sqf')) {
 		console.log("SQF file string: " + sqfFileString);
 
 		functionDirPath = path.dirname(sqfFileString);
-		while (functionDirPath.charAt(0) === '/') {
+		while (functionDirPath.charAt(0) === path.sep) {
 			functionDirPath = functionDirPath.substring(1);
 		}
 
-		functionDirPath = functionDirPath.replace(/\//g,"\\");
-		sqfFileString = sqfFileString.replace(/\//g,"\\");
+		
 
 		console.log("FunctionDirPath: " + functionDirPath);
 		
-		var functionDirPathSplit = functionDirPath.split("\\");
+		var functionDirPathSplit = functionDirPath.split(path.sep);
 		
 		const depth = functionDirPathSplit.length;
 		console.log("Depth: " + depth);
 		console.log("Function directory path split: " + functionDirPathSplit);
 
-		var sqfFileStringSplit = sqfFileString.split("\\");
+		var sqfFileStringSplit = sqfFileString.split(path.sep);
 		console.log("SQF file string split: " + sqfFileStringSplit);
 		var sqfFilename = sqfFileStringSplit.at(-1);
 		console.log("SQF filename: " + sqfFilename);
@@ -173,7 +167,7 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 
 			var sqfFileStringTemp = sqfFileString;
 
-			while (sqfFileStringTemp.charAt(0) === '\\') {
+			while (sqfFileStringTemp.charAt(0) === path.sep) {
 				sqfFileStringTemp = sqfFileStringTemp.substring(1);
 			}
 			console.log("FUNCTION DIR PATH: " + sqfFileStringTemp);
@@ -181,11 +175,11 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			functionName = functionName.replace("fn_", "");
 			console.log("Function name: " + functionName);
 
-			functionPath = functionDirPath + "\\" + sqfFilename;
+			functionPath = functionDirPath + path.sep + sqfFilename;
 
 			if (depth > 2) {
 				var functionDirPathSplitReversed = functionDirPathSplit.reverse();
-				subcategory = functionDirPathSplitReversed[depth - (depth - (depth - 2))];
+				subcategory = functionDirPathSplitReversed[depth - (depth - (depth - 3))];
 				console.log("Subcategory: " + subcategory);
 
 				returnValue = nestedFolderFunctionName(subcategory, functionName, functionPath);
