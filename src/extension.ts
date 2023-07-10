@@ -13,6 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Use the console to output diagnostic information (console.log) and errors (console.error)
 	// This line of code will only be executed once when your extension is activated
 	// console.log("Hello!");
+	const outputChannel = vscode.window.createOutputChannel("Arma 3 CfgFunctions.hpp Generator");
 
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
@@ -20,8 +21,8 @@ export function activate(context: vscode.ExtensionContext) {
 	let disposableCfgFunctionsGenerator = vscode.commands.registerCommand('cfgfunctions.generateCfgFunctions', async () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
-
-		const outputChannel = vscode.window.createOutputChannel("Arma 3 CfgFunctions.hpp Generator");
+ 
+		outputChannel.clear();
 		outputChannel.show();
 
 		outputChannel.appendLine("###  ARMA 3 CFGFUNCTIONS GENERATOR  ###");
@@ -120,11 +121,12 @@ export function activate(context: vscode.ExtensionContext) {
 		const currentEditor = vscode.window.activeTextEditor;
 
 		if (currentEditor) {
+			// let cfgFunctionsHpp = vscode.window.tabGroups.activeTabGroup.activeTab?.input.kind.uri;
 			let cfgFunctionsHpp = currentEditor.document.uri.fsPath;
 			fs.writeFileSync(cfgFunctionsHpp, outputCfgFunctions, 'utf8');
 		};
 
-		outputChannel.appendLine("---");
+		outputChannel.appendLine("");
 		outputChannel.appendLine("Generation of CfgFunctions.hpp finished.");
 
 	});
