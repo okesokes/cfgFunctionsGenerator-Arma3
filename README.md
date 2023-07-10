@@ -21,6 +21,8 @@ This Visual Studio Code extension creates CfgFunctions.hpp file with a simple cl
 
 ## Known Issues
 
+* User must click the CfgFunctions.hpp file contents in editor view at first before clicking the "Generate CfgFunctions.hpp (Arma 3)" button.
+
 It's WIP. Expect issues.
 
 ## Release Notes
