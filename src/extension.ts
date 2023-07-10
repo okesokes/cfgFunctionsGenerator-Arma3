@@ -91,11 +91,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 		console.log("currentDirString: " + currentDirString);
 
+		let focusWarningShown = false;
+
 		categories.forEach (function (category) {
 			content = content + "\t\tclass " + category + "\n\t\t{\n\n";
 
-			const sqfFiles = fastglob.sync((category + "/**/*.sqf"), {cwd: currentDirString, globstar: true});
+			let sqfFiles = [""];
 
+			try {
+				sqfFiles = fastglob.sync((category + "/**/*.sqf"), {cwd: currentDirString, globstar: true});
+			} catch (error) {
+				vscode.window.showErrorMessage("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
+				outputChannel.appendLine("*** GENERIC ERROR ***")
+				outputChannel.appendLine("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
+				outputChannel.appendLine("***");
+				return;
+			};
+			
 			console.log(sqfFiles);
 
 			if (sqfFiles.length > 0) {
@@ -106,6 +118,14 @@ export function activate(context: vscode.ExtensionContext) {
 						content = content + "\t\t\t" + formattedClass + "\n";
 					}
 				});
+			} else {
+				if (!focusWarningShown) {
+					vscode.window.showErrorMessage("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
+					outputChannel.appendLine("*** GENERIC ERROR ***")
+					outputChannel.appendLine("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
+					outputChannel.appendLine("***");
+					focusWarningShown = true;
+				};
 			};
 
 			content = content + "\n\t\t};\n\n";
