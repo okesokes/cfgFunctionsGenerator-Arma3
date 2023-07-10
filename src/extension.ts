@@ -22,6 +22,8 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
  
+		let errors = false;
+		
 		outputChannel.clear();
 		outputChannel.show();
 
@@ -34,6 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(developerTag === 'YOUR_TAG_HERE') {
 			vscode.window.showErrorMessage('Your developer/project tag is not yet defined in extension settings! Please define it via VS Code -> Settings -> Extensions and try again.');
+			errors = true;
 			// return;
 		}
 
@@ -105,6 +108,7 @@ export function activate(context: vscode.ExtensionContext) {
 				outputChannel.appendLine("*** GENERIC ERROR ***")
 				outputChannel.appendLine("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
 				outputChannel.appendLine("***");
+				errors = true;
 				return;
 			};
 			
@@ -121,10 +125,12 @@ export function activate(context: vscode.ExtensionContext) {
 			} else {
 				if (!focusWarningShown) {
 					vscode.window.showErrorMessage("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
-					outputChannel.appendLine("*** GENERIC ERROR ***")
+					outputChannel.appendLine("GENERIC ERROR")
 					outputChannel.appendLine("Something went wrong! Make sure that you've clicked the editor area of your CfgFunctions.hpp before clicking the generate button.");
-					outputChannel.appendLine("***");
+					outputChannel.appendLine("---");
 					focusWarningShown = true;
+					errors = true;
+					return;
 				};
 			};
 
@@ -146,9 +152,11 @@ export function activate(context: vscode.ExtensionContext) {
 			fs.writeFileSync(cfgFunctionsHpp, outputCfgFunctions, 'utf8');
 		};
 
-		outputChannel.appendLine("");
-		outputChannel.appendLine("Generation of CfgFunctions.hpp finished.");
-
+		if (!errors) {
+			outputChannel.appendLine("");
+			outputChannel.appendLine("Generation of CfgFunctions.hpp finished.");
+		};
+		
 	});
 
 	context.subscriptions.push(disposableCfgFunctionsGenerator);
@@ -235,7 +243,7 @@ function formatFunctionClass(sqfFileURI: vscode.Uri, outputChannel: vscode.Outpu
 
 	} else {
 		vscode.window.showErrorMessage("Generic error! Something went wrong when generating CfgFunctions. Double check the contents of it.");
-		outputChannel.appendLine("Generic error! Something went wrong when generating CfgFunctions. Double check the contents of it.");
+		outputChannel.appendLine("GENERIC ERROR! Something went wrong when generating CfgFunctions. Double check the contents of it.");
 		return;
 	}
 
