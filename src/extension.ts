@@ -31,14 +31,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 		console.log('Your tag is: ' + developerTag);
 
-		vscode.window.showInformationMessage('Your developer/project tag is: ' + developerTag);
-
 		if(developerTag === 'YOUR_TAG_HERE') {
 			vscode.window.showErrorMessage('Your developer/project tag is not yet defined in extension settings! Please define it via VS Code -> Settings -> Extensions and try again.');
 			// return;
 		}
 
 		outputChannel.appendLine("Starting to generate CfgFunctions.hpp.");
+		outputChannel.appendLine("---");
+
+		outputChannel.appendLine('Your developer/project tag is: ' + developerTag);
 		outputChannel.appendLine("---");
 
 		// Define start of CfgFunctions.hpp
