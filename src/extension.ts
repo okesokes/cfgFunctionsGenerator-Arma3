@@ -21,6 +21,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
 
+		const outputChannel = vscode.window.createOutputChannel("Arma 3 CfgFunctions.hpp Generator");
+		outputChannel.show();
+
+		outputChannel.appendLine("###  ARMA 3 CFGFUNCTIONS GENERATOR  ###");
+		outputChannel.appendLine("---");
+
 		const developerTag = vscode.workspace.getConfiguration().get('cfgfunctionsTag');
 
 		console.log('Your tag is: ' + developerTag);
@@ -31,6 +37,9 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage('Your developer/project tag is not yet defined in extension settings! Please define it via VS Code -> Settings -> Extensions and try again.');
 			// return;
 		}
+
+		outputChannel.appendLine("Starting to generate CfgFunctions.hpp.");
+		outputChannel.appendLine("---");
 
 		// Define start of CfgFunctions.hpp
 		let content =
@@ -57,7 +66,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if (filesOutsideOfFunctionsFolder.length > 0) {
 			filesOutsideOfFunctionsFolder.forEach(function(fileOutside) {
-				const addFnToFile = vscode.window.showWarningMessage("File \"" + fileOutside + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of " + path.sep + "functions folder.");
+				outputChannel.appendLine("File \"" + fileOutside + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of " + path.sep + "functions folder.");
 			});
 		};
 		
@@ -83,13 +92,13 @@ export function activate(context: vscode.ExtensionContext) {
 		categories.forEach (function (category) {
 			content = content + "\t\tclass " + category + "\n\t\t{\n\n";
 
-			const sqfFiles = fastglob.sync((category + path.sep + "**" + path.sep + "*.sqf"), {cwd: currentDirString, globstar: true});
+			const sqfFiles = fastglob.sync((category + "/**/*.sqf"), {cwd: currentDirString, globstar: true});
 
 			console.log(sqfFiles);
 
 			if (sqfFiles.length > 0) {
 				sqfFiles.forEach(function(sqfFile) {
-					const formattedClass = formatFunctionClass(vscode.Uri.file(sqfFile));
+					const formattedClass = formatFunctionClass(vscode.Uri.file(sqfFile), outputChannel);
 
 					if (formattedClass !== "") {
 						content = content + "\t\t\t" + formattedClass + "\n";
@@ -114,6 +123,9 @@ export function activate(context: vscode.ExtensionContext) {
 			fs.writeFileSync(cfgFunctionsHpp, outputCfgFunctions, 'utf8');
 		};
 
+		outputChannel.appendLine("---");
+		outputChannel.appendLine("Generation of CfgFunctions.hpp finished.");
+
 	});
 
 	context.subscriptions.push(disposableCfgFunctionsGenerator);
@@ -122,7 +134,7 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
-function formatFunctionClass(sqfFileURI: vscode.Uri) {
+function formatFunctionClass(sqfFileURI: vscode.Uri, outputChannel: vscode.OutputChannel) {
 	let functionName = "";
 	let functionPath = "";
 	let functionDirPath = "";
@@ -155,7 +167,8 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 		let sqfFilename = sqfFileStringSplit.at(-1);
 
 		if (sqfFilename === undefined) {
-			vscode.window.showErrorMessage("Generic error! SQF file name is undefined.");
+			vscode.window.showErrorMessage("Generic error!");
+			outputChannel.appendLine("GENERIC ERROR");
 		};
 
 		console.log("SQF filename: " + sqfFilename);
@@ -190,15 +203,16 @@ function formatFunctionClass(sqfFileURI: vscode.Uri) {
 			}
 			
 			else {
-				vscode.window.showWarningMessage("Function \"" + functionName + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of " + path.sep + "functions folder.");
+				outputChannel.appendLine("Function \"" + functionName + "\" didn't get included to CfgFunctions. It needs to be located in a subfolder of " + path.sep + "functions folder.");
 			};
 
 		} else {
-			const addFnToFile = vscode.window.showWarningMessage("File \"" + sqfFilename + "\" didn't get included to CfgFunctions: file name didn't start with 'fn_'.");
+			outputChannel.appendLine("File \"" + functionDirPath + path.sep + sqfFilename + "\" didn't get included to CfgFunctions: file name didn't start with 'fn_'.");
 		};
 
 	} else {
 		vscode.window.showErrorMessage("Generic error! Something went wrong when generating CfgFunctions. Double check the contents of it.");
+		outputChannel.appendLine("Generic error! Something went wrong when generating CfgFunctions. Double check the contents of it.");
 		return;
 	}
 
